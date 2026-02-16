@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Job Keyword Spider Web</title>
+  <script src="https://unpkg.com/force-graph"></script>
+  <style>
+    body { margin: 0; font-family: sans-serif; overflow: hidden; background: #101020; color: white; }
+    #graph { width: 100vw; height: 100vh; }
+    #info { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; pointer-events: none; }
+    .controls { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; font-size: 12px;}
+  </style>
+</head>
+<body>
+  <div id="info">Hover over a node to see details. Click a Job node to open it.</div>
+  <div id="graph"></div>
+  <div class="controls">
+    Scroll to Zoom | Drag to Pan | Blue: Keywords | Orange: Jobs
+  </div>
+
+  <script>
+    fetch('graph_data.json').then(res => res.json()).then(data => {
+      const Graph = ForceGraph()
+        (document.getElementById('graph'))
+          .graphData(data)
+          .nodeId('id')
+          .nodeLabel(node => node.group === 1 ? `Keyword: ${node.name}` : `Job: ${node.name}`)
+          .nodeColor(node => node.group === 1 ? '#4facfe' : '#f093fb')
+          .nodeVal(node => node.val)
+          .linkDirectionalParticles(2)
+          .linkDirectionalParticleSpeed(d => 0.005)
+          .onNodeClick(node => {
+            if (node.group === 2 && node.url && node.url !== '#') {
+              window.open(node.url, '_blank');
+            }
+          })
+          .nodeCanvasObject((node, ctx, globalScale) => {
+            const label = node.name;
+            const fontSize = 12/globalScale;
+            ctx.font = `${fontSize}px Sans-Serif`;
+            const textWidth = ctx.measureText(label).width;
+            const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); 
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.group === 1 ? 5 : 3, 0, 2 * Math.PI, false);
+            ctx.fill();
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = node.group === 1 ? '#4facfe' : '#f093fb';
+            ctx.fillText(label, node.x, node.y + (node.group === 1 ? 10 : 8));
+          });
+    });
+  </script>
+</body>
+</html>
